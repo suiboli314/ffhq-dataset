@@ -57,7 +57,7 @@ license_specs = {
 #----------------------------------------------------------------------------
 
 def download_file(session, file_spec, stats, chunk_size=128, num_attempts=10, **kwargs):
-    file_path = file_spec['file_path']
+    file_path = "{}/{}".format(kwargs['dst_dir'],file_spec['file_path'])
     file_url = file_spec['file_url']
     file_dir = os.path.dirname(file_path)
     tmp_path = file_path + '.tmp.' + uuid.uuid4().hex
@@ -155,7 +155,7 @@ def format_time(seconds):
 def download_files(file_specs, num_threads=32, status_delay=0.2, timing_window=50, **download_kwargs):
 
     # Determine which files to download.
-    done_specs = {spec['file_path']: spec for spec in file_specs if os.path.isfile(spec['file_path'])}
+    done_specs = {spec['file_path']: spec for spec in file_specs if os.path.isfile("{}/{}".format(download_kwargs['dst_dir'],spec['file_path']))}
     missing_specs = [spec for spec in file_specs if spec['file_path'] not in done_specs]
     files_total = len(file_specs)
     bytes_total = sum(spec['file_size'] for spec in file_specs)
@@ -409,7 +409,7 @@ def run(tasks, **download_kwargs):
         download_files(specs, **download_kwargs)
 
     if 'align' in tasks:
-        recreate_aligned_images(json_data, source_dir=download_kwargs['source_dir'], rotate_level=not download_kwargs['no_rotation'], random_shift=download_kwargs['random_shift'], enable_padding=not download_kwargs['no_padding'], retry_crops=download_kwargs['retry_crops'])
+        recreate_aligned_images(json_data, source_dir=download_kwargs['source_dir'], dst_dir=download_kwargs['dst_dir'], rotate_level=not download_kwargs['no_rotation'], random_shift=download_kwargs['random_shift'], enable_padding=not download_kwargs['no_padding'], retry_crops=download_kwargs['retry_crops'])
 
 #----------------------------------------------------------------------------
 
@@ -432,6 +432,7 @@ def run_cmdline(argv):
     parser.add_argument('--no-rotation',        help='keep the original orientation of images', dest='no_rotation', default=False, action='store_true')
     parser.add_argument('--no-padding',         help='do not apply blur-padding outside and near the image borders', dest='no_padding', default=False, action='store_true')
     parser.add_argument('--source-dir',         help='where to find already downloaded FFHQ source data', default='', metavar='DIR')
+    parser.add_argument('--dst-dir',            help='where to find dst downloaded FFHQ source data', default='', metavar='DIR')
 
     args = parser.parse_args()
     if not args.tasks:
@@ -445,3 +446,4 @@ if __name__ == "__main__":
     run_cmdline(sys.argv)
 
 #----------------------------------------------------------------------------
+
